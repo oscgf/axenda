@@ -12,7 +12,7 @@ API_URL = "https://opendata.gijon.es/descargar.php?id=728&tipo=JSON"
 
 class GijonOpenDataScraper(BaseScraper):
     source = "gijon_opendata"
-    city_name = "Gijón"
+    city_name = "gijon"  # Normalized: lowercase, no accent
 
     def __init__(self) -> None:
         self._min_date = datetime(2026, 1, 1, tzinfo=UTC)
@@ -129,7 +129,9 @@ class GijonOpenDataScraper(BaseScraper):
         raise ValueError(f"Cannot parse date: {raw}")
 
     @staticmethod
-    def _clean_url(url: str) -> str:
-        if not url:
+    def _clean_url(alias: str) -> str:
+        if not alias:
             return ""
-        return url.strip()
+        alias = alias.strip().strip("/")
+        slug = alias.split("/")[-1]
+        return f"https://www.gijon.es/eventos/{slug}" if slug else ""

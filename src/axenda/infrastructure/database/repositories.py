@@ -20,7 +20,7 @@ class SQLCityRepository(CityRepository):
 
     async def get_by_name(self, name: str) -> City | None:
         result = await self._session.execute(
-            select(CityModel).where(CityModel.name == name)
+            select(CityModel).where(CityModel.name.ilike(name))
         )
         model = result.scalar_one_or_none()
         return self._to_domain(model) if model else None
@@ -61,7 +61,7 @@ class SQLVenueRepository(VenueRepository):
         result = await self._session.execute(
             select(VenueModel)
             .join(CityModel)
-            .where(CityModel.name == city)
+            .where(CityModel.name.ilike(city))
         )
         return [self._to_domain(m) for m in result.scalars().all()]
 
@@ -125,7 +125,7 @@ class SQLEventRepository(EventRepository):
                 selectinload(EventModel.venue),
                 selectinload(EventModel.genres),
             )
-            .where(CityModel.name == city)
+            .where(CityModel.name.ilike(city))
         )
 
         if date_from:

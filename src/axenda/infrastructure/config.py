@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     database_url: str = "sqlite+aiosqlite:///data/axenda.db"
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama3.1:8b"
+    ollama_model: str = "llama3.2:3b"
     log_level: str = "DEBUG"
     default_city: str = "Gijón"
 
