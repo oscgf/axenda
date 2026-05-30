@@ -125,6 +125,5 @@ class GijonOpenDataScraper(BaseScraper):
     def _clean_url(alias: str) -> str:
         if not alias:
             return ""
-        alias = alias.strip().strip("/")
-        slug = alias.split("/")[-1]
-        return f"https://www.gijon.es/eventos/{slug}" if slug else ""
+        slug = alias.strip()
+        return f"https://www.gijon.es/eventos{slug}" if slug else ""

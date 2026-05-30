@@ -46,24 +46,21 @@ class FakeOllamaClient:
 
     async def chat(self, messages: list[dict], tools: list[dict] | None = None) -> dict:
         self.calls.append({"messages": messages, "tools": tools})
-        if len(self.calls) == 1:
-            return {
-                "message": {
-                    "role": "assistant",
-                    "content": "",
-                    "tool_calls": [
-                        {
-                            "id": "call_1",
-                            "function": {
-                                "name": self.tool_name,
-                                "arguments": self.arguments,
-                            },
-                        }
-                    ],
-                }
+        return {
+            "message": {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "function": {
+                            "name": self.tool_name,
+                            "arguments": self.arguments,
+                        },
+                    }
+                ],
             }
-        else:
-            return {"message": {"role": "assistant", "content": "Aquí tienes los resultados."}}
+        }
 
 
 @pytest.mark.asyncio
@@ -91,7 +88,8 @@ async def test_search_events_use_case_basic() -> None:
 
     use_case = SearchEventsUseCase(llm, events, venues)
     result = await use_case.execute("¿Hay conciertos?", "Gijón")
-    assert "resultados" in result.lower() or "Aquí" in result
+    assert "Concierto" in result
+    assert "01/06/2026" in result
 
 
 @pytest.mark.asyncio
@@ -104,7 +102,7 @@ async def test_search_events_use_case_no_results() -> None:
 
     use_case = SearchEventsUseCase(llm, events, venues)
     result = await use_case.execute("¿Hay algo?", "Gijón")
-    assert "resultados" in result.lower() or "Aquí" in result
+    assert "No se encontraron" in result
 
 
 @pytest.mark.asyncio
@@ -124,40 +122,62 @@ async def test_search_events_use_case_no_tool_call() -> None:
     assert "Hola" in result
 
 
-@pytest.mark.asyncio
-async def test_parse_date_valid() -> None:
-    from axenda.application.search_events import SearchEventsUseCase
+class TestParseHelpers:
+    def test_parse_date_valid(self) -> None:
+        from axenda.application.search_events import _parse_date
 
-    uc = SearchEventsUseCase(None, None, None)  # type: ignore[arg-type]
-    result = uc._parse_date("2026-06-15")
-    assert result is not None
-    assert result.year == 2026
-    assert result.month == 6
-    assert result.day == 15
+        result = _parse_date("2026-06-15")
+        assert result is not None
+        assert result.year == 2026
+        assert result.month == 6
+        assert result.day == 15
 
+    def test_parse_date_invalid(self) -> None:
+        from axenda.application.search_events import _parse_date
 
-@pytest.mark.asyncio
-async def test_parse_date_invalid() -> None:
-    from axenda.application.search_events import SearchEventsUseCase
+        assert _parse_date("notadate") is None
+        assert _parse_date(None) is None
 
-    uc = SearchEventsUseCase(None, None, None)  # type: ignore[arg-type]
-    assert uc._parse_date("notadate") is None
-    assert uc._parse_date(None) is None
+    def test_parse_event_type_valid(self) -> None:
+        from axenda.application.search_events import _parse_event_type
 
+        assert _parse_event_type("Música") == EventType.MUSICA
+        assert _parse_event_type("Teatro") == EventType.TEATRO
 
-@pytest.mark.asyncio
-async def test_parse_event_type_valid() -> None:
-    from axenda.application.search_events import SearchEventsUseCase
+    def test_parse_event_type_correction(self) -> None:
+        from axenda.application.search_events import _parse_event_type
 
-    uc = SearchEventsUseCase(None, None, None)  # type: ignore[arg-type]
-    assert uc._parse_event_type("Música") == EventType.MUSICA
-    assert uc._parse_event_type("Teatro") == EventType.TEATRO
+        assert _parse_event_type("musica") == EventType.MUSICA
+        assert _parse_event_type("Múmica") == EventType.MUSICA
 
+    def test_parse_event_type_invalid(self) -> None:
+        from axenda.application.search_events import _parse_event_type
 
-@pytest.mark.asyncio
-async def test_parse_event_type_invalid() -> None:
-    from axenda.application.search_events import SearchEventsUseCase
+        assert _parse_event_type("Fiestón") is None
+        assert _parse_event_type(None) is None
 
-    uc = SearchEventsUseCase(None, None, None)  # type: ignore[arg-type]
-    assert uc._parse_event_type("Fiestón") is None
-    assert uc._parse_event_type(None) is None
+    def test_parse_limit(self) -> None:
+        from axenda.application.search_events import _parse_limit
+
+        assert _parse_limit(5) == 5
+        assert _parse_limit("3") == 3
+        assert _parse_limit("") == 10
+        assert _parse_limit(None) == 10
+
+    def test_format_events(self) -> None:
+        from axenda.application.search_events import _format_events
+
+        result = _format_events({"events": [], "total": 0, "city": "gijon"})
+        assert "No se encontraron" in result
+
+    def test_format_venues(self) -> None:
+        from axenda.application.search_events import _format_venues
+
+        result = _format_venues({"venues": [], "city": "gijon"})
+        assert "No hay" in result
+
+    def test_normalize_city(self) -> None:
+        from axenda.application.search_events import _normalize_city
+
+        assert _normalize_city("Gijón") == "gijon"
+        assert _normalize_city("gijon") == "gijon"
