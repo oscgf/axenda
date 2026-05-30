@@ -7,11 +7,11 @@ import httpx
 from axenda.domain.models import Event, EventType
 from axenda.infrastructure.scraper.base import BaseScraper
 
-API_URL = "https://opendata.gijon.es/descargar.php?id=728&tipo=JSON"
+API_URL = "https://drupal.gijon.es/es/listado_eventos_tes4/?_format=json"
 
 
 class GijonOpenDataScraper(BaseScraper):
-    source = "gijon_opendata"
+    source = "gijon_drupal"
     city_name = "gijon"  # Normalized: lowercase, no accent
 
     def __init__(self) -> None:
@@ -24,20 +24,13 @@ class GijonOpenDataScraper(BaseScraper):
 
     def parse(self, raw: list[dict]) -> list[Event]:
         events: list[Event] = []
-        found_any = False
         for item in raw:
             try:
                 event = self._parse_event(item)
                 if event:
                     events.append(event)
-                    found_any = True
             except Exception:
                 continue
-
-        if not found_any and self._min_date.year > 2025:
-            self._min_date = datetime(2025, 1, 1, tzinfo=UTC)
-            return self.parse(raw)
-
         return events
 
     def get_source_id(self, raw_event: dict) -> str:

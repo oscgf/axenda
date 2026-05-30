@@ -1346,4 +1346,4 @@ dev = ["mypy", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "ruff"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "ba338295e9937b911bcdf3789584b603cd5b389cd73a3fc0c8818b236ec856b9"
+content-hash = "40ad199b42c580ea82903b00cd941fbb0556b7229483b1764fffb78742ecfb25"
