@@ -13,7 +13,7 @@ class TestOllamaClient:
     def test_build_system_message_includes_today(self) -> None:
         client = OllamaClient()
         msg = client.build_system_message("Gijón")
-        assert "NO inventes" in msg["content"]
+        assert "finde" in msg["content"] or "fin de semana" in msg["content"]
 
     def test_build_system_message_asturian_locale(self) -> None:
         client = OllamaClient()

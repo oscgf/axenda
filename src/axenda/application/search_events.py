@@ -224,10 +224,10 @@ def _parse_event_type(value: str | None) -> EventType | None:
 
 def _parse_limit(value) -> int:
     if isinstance(value, int):
-        return max(1, value)
+        return min(max(1, value), 15)
     if isinstance(value, str) and value.strip():
         try:
-            return max(1, int(value))
+            return min(max(1, int(value)), 15)
         except (ValueError, TypeError):
             pass
     return 10

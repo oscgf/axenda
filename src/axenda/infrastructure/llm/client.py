@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import httpx
 
 from axenda.infrastructure.config import settings
@@ -45,17 +47,17 @@ class OllamaClient:
             return data["message"]["content"]
 
     def build_system_message(self, city: str, locale: str = "es") -> dict:
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         return {
             "role": "system",
             "content": (
-                f"Eres un asistente cultural para {city}.\n"
+                f"Eres un asistente cultural para {city}. Hoy es {today}.\n"
                 f"Usa search_events si el usuario pregunta por eventos. "
                 f"Usa list_venues si pregunta por salas. "
                 f"Usa get_event_details si pregunta por un evento concreto.\n"
-                f"Responde en {locale}. Muestra SOLO los datos que recibes "
-                f"de las tools, NO inventes eventos ni cambies fechas.\n"
-                f"Formato: 📅 DD/MM/AAAA - Titulo (Tipo) - Lugar - Precio\n"
-                f"🔗 url\n"
-                f"Incluye SIEMPRE la URL. Fuente: Open Data Gijon."
+                f"Responde en {locale}.\n"
+                f"Para 'finde' o 'fin de semana' usa date_from y date_to "
+                f"con el viernes y domingo de esta semana. "
+                f"Las fechas en formato YYYY-MM-DD."
             ),
         }
