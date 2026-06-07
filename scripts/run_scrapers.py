@@ -19,35 +19,42 @@ async def run_scraper(scraper) -> None:
     )
 
     try:
+        # Fetch raw data and parse events
         raw_data = scraper.fetch()
         events = scraper.parse(raw_data)
         events_found = len(raw_data)
 
+        # Process events
         async with async_session() as session:
+            # Repositories
             city_repo = SQLCityRepository(session)
             venue_repo = SQLVenueRepository(session)
             event_repo = SQLEventRepository(session)
 
-            city = await city_repo.get_or_create(
-                name=scraper.city_name,
-                region="Asturias",
-            )
-
+            # Counters
             events_new = 0
             events_updated = 0
 
+            # Process each event
             for event in events:
-                event.city_id = city.id
-
                 raw_item = _find_raw_item(raw_data, event.source_id)
                 if raw_item:
+                    city = await city_repo.get_or_create(
+                        name=scraper.get_event_city_name(raw_item),
+                        name_normalized=scraper.get_event_city_normalized(raw_item),
+                        region=scraper.city_region,
+                    )
+                    event.city_id = city.id
+
                     venue_name = scraper.get_venue_name(raw_item)
                     if venue_name:
                         venue_addr = scraper.get_venue_address(raw_item) or None
+                        venue_url = scraper.get_venue_url(raw_item) or None
                         venue = await venue_repo.get_or_create(
                             name=venue_name,
                             city_id=city.id,
                             address=venue_addr,
+                            url=venue_url,
                         )
                         event.venue_id = venue.id
 

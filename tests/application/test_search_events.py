@@ -79,7 +79,7 @@ async def test_search_events_use_case_basic() -> None:
             id=1,
             title="Concierto de prueba",
             event_type=EventType.MUSICA,
-            date_start=datetime(2026, 6, 1, tzinfo=UTC),
+            event_date=datetime(2026, 6, 1, tzinfo=UTC),
             source="test",
             source_id="1",
             city_id=1,
@@ -177,7 +177,7 @@ class TestParseHelpers:
         assert "No hay" in result
 
     def test_normalize_city(self) -> None:
-        from axenda.application.search_events import _normalize_city
+        from axenda.domain.text import _normalize_city
 
         assert _normalize_city("Gijón") == "gijon"
         assert _normalize_city("gijon") == "gijon"

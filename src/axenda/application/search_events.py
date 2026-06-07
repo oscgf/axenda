@@ -2,6 +2,7 @@ from datetime import datetime
 
 from axenda.domain.models import EventType
 from axenda.domain.repositories import EventRepository, VenueRepository
+from axenda.domain.text import _normalize_city
 from axenda.infrastructure.llm.client import OllamaClient
 from axenda.infrastructure.llm.tools import ALL_TOOLS
 
@@ -75,9 +76,7 @@ class SearchEventsUseCase:
                     "id": e.id,
                     "title": e.title,
                     "event_type": e.event_type.value,
-                    "date": e.date_start.strftime("%d/%m/%Y"),
-                    "date_end": e.date_end.strftime("%d/%m/%Y") if e.date_end else None,
-                    "venue": e.venue.name if e.venue else "Sin espacio",
+                    "date": e.event_date.strftime("%d/%m/%Y"),
                     "city": city,
                     "price_info": e.price_info or "Consultar",
                     "genres": e.genres,
@@ -103,8 +102,7 @@ class SearchEventsUseCase:
             "title": event.title,
             "event_type": event.event_type.value,
             "description": event.description,
-            "date_start": event.date_start.strftime("%d/%m/%Y %H:%M"),
-            "date_end": event.date_end.strftime("%d/%m/%Y %H:%M") if event.date_end else None,
+            "event_date": event.event_date.strftime("%d/%m/%Y %H:%M"),
             "venue": event.venue.name if event.venue else "Sin espacio",
             "price_info": event.price_info,
             "genres": event.genres,
@@ -145,7 +143,7 @@ def _format_events(result: dict) -> str:
     for e in events:
         line = (
             f"📅 {e['date']} — {e['title']} ({e['event_type']}) "
-            f"— {e['venue']} — {e['price_info']}"
+            f" — {e['price_info']}"
         )
         lines.append(line)
         if e.get("url"):
@@ -174,7 +172,7 @@ def _format_detail(result: dict) -> str:
 
     lines = [
         f"🎭 {result['title']}",
-        f"📅 {result['date_start']}",
+        f"📅 {result['event_date']}",
     ]
     if result.get("venue"):
         lines.append(f"📍 {result['venue']}")
@@ -185,16 +183,6 @@ def _format_detail(result: dict) -> str:
     if result.get("url"):
         lines.append(f"\n🔗 {result['url']}")
     return "\n".join(lines)
-
-
-def _normalize_city(name: str) -> str:
-    accents = {
-        "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u",
-        "Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U",
-    }
-    for accented, plain in accents.items():
-        name = name.replace(accented, plain)
-    return name.lower()
 
 
 def _parse_date(value: str | None) -> datetime | None:
