@@ -37,7 +37,7 @@ async def run_scraper(scraper) -> None:
 
             # Process each event
             for event in events:
-                raw_item = _find_raw_item(raw_data, event.source_id)
+                raw_item = _find_raw_item(raw_data, event.source_id, scraper)
                 if raw_item:
                     city = await city_repo.get_or_create(
                         name=scraper.get_event_city_name(raw_item),
@@ -85,9 +85,9 @@ async def run_scraper(scraper) -> None:
         raise
 
 
-def _find_raw_item(raw_data: list[dict], source_id: str) -> dict | None:
+def _find_raw_item(raw_data: list[dict], source_id: str, scraper) -> dict | None:
     for item in raw_data:
-        if str(item.get("id", "")) == source_id:
+        if scraper.get_source_id(item, "id") == source_id:
             return item
     return None
 

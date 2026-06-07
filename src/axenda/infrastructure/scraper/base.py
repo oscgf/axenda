@@ -1,4 +1,7 @@
+import hashlib
+import re
 from abc import ABC, abstractmethod
+from html import unescape
 
 from axenda.domain.models import Event
 from axenda.domain.text import _normalize_city
@@ -17,7 +20,6 @@ class BaseScraper(ABC):
         """
         ...
 
-    @abstractmethod
     def parse(self, raw: list[dict]) -> list[Event]:
         """Convierte los datos crudos en objetos Event.
 
@@ -37,8 +39,7 @@ class BaseScraper(ABC):
                 continue
         return events
 
-    @abstractmethod
-    def get_source_id(self, raw_event: dict, id_field: str) -> str:
+    def get_source_id(self, raw_event: dict, id_field: str = "id") -> str:
         """Genera un identificador único para el evento desde la fuente.
 
         Usa el campo especificado por `id_field` concatenado con el nombre de la fuente
