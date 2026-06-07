@@ -8,9 +8,9 @@ from axenda.infrastructure.database.orm_models import EventModel
 async def main():
     async with async_session() as s:
         result = await s.execute(
-            select(extract("month", EventModel.date_start), func.count())
-            .group_by(extract("month", EventModel.date_start))
-            .order_by(extract("month", EventModel.date_start))
+            select(extract("month", EventModel.event_date), func.count())
+            .group_by(extract("month", EventModel.event_date))
+            .order_by(extract("month", EventModel.event_date))
         )
         meses = [
             "", "Ene", "Feb", "Mar", "Abr", "May", "Jun",

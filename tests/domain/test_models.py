@@ -20,13 +20,19 @@ class TestEventType:
 
 class TestCity:
     def test_create_city(self) -> None:
-        city = City(id=1, name="Gijón", region="Asturias")
+        city = City(id=1, name="Gijón", name_normalized="gijon", region="Asturias")
         assert city.name == "Gijón"
         assert city.default_locale == "es"
         assert city.timezone == "Europe/Madrid"
 
     def test_city_asturian_locale(self) -> None:
-        city = City(id=1, name="Gijón", region="Asturias", default_locale="ast")
+        city = City(
+            id=1,
+            name="Gijón",
+            name_normalized="gijon",
+            region="Asturias",
+            default_locale="ast",
+        )
         assert city.default_locale == "ast"
 
 
@@ -41,11 +47,10 @@ class TestVenue:
             id=1,
             name="Teatro Jovellanos",
             address="Calle A, 1",
-            latitude=43.54,
-            longitude=-5.66,
+            url="https://example.com",
             city_id=1,
         )
-        assert venue.latitude == 43.54
+        assert venue.address == "Calle A, 1"
 
 
 class TestEvent:
@@ -54,7 +59,7 @@ class TestEvent:
             id=1,
             title="Concierto de prueba",
             event_type=EventType.MUSICA,
-            date_start=datetime(2026, 6, 1, tzinfo=UTC),
+            event_date=datetime(2026, 6, 1, tzinfo=UTC),
             source="test",
             source_id="123",
             city_id=1,
@@ -70,17 +75,14 @@ class TestEvent:
             title="Conciertazo",
             event_type=EventType.MUSICA,
             description="Un gran concierto",
-            date_start=datetime(2026, 6, 1, 21, 0, tzinfo=UTC),
-            date_end=datetime(2026, 6, 1, 23, 0, tzinfo=UTC),
+            event_date=datetime(2026, 6, 1, 21, 0, tzinfo=UTC),
             price_info="15€",
             url="https://example.com",
             source="test",
             source_id="abc",
             venue_id=1,
             city_id=1,
-            venue=venue,
             genres=["rock", "pop"],
         )
         assert event.genres == ["rock", "pop"]
-        assert event.venue == venue
         assert event.price_info == "15€"

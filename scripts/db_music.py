@@ -9,7 +9,7 @@ from axenda.infrastructure.database.orm_models import EventModel
 async def main():
     async with async_session() as s:
         min_max = await s.execute(
-            select(func.min(EventModel.date_start), func.max(EventModel.date_start))
+            select(func.min(EventModel.event_date), func.max(EventModel.event_date))
         )
         mn, mx = min_max.one()
         print(f"Rango de fechas: {mn.strftime('%d/%m/%Y')} → {mx.strftime('%d/%m/%Y')}")
@@ -17,16 +17,16 @@ async def main():
         result = await s.execute(
             select(EventModel)
             .where(EventModel.event_type == "Música")
-            .order_by(EventModel.date_start.desc())
+            .order_by(EventModel.event_date.desc())
             .limit(10)
         )
         print("\nÚltimos 10 eventos de MÚSICA:")
         for e in result.scalars():
-            print(f"  [{e.date_start.strftime('%d/%m/%Y')}] {e.title[:70]}")
+            print(f"  [{e.event_date.strftime('%d/%m/%Y')}] {e.title[:70]}")
 
         count_future = await s.execute(
             select(func.count(EventModel.id)).where(
-                EventModel.date_start >= datetime.now(UTC)
+                EventModel.event_date >= datetime.now(UTC)
             )
         )
         print(f"\nEventos futuros: {count_future.scalar()}")

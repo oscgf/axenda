@@ -28,6 +28,7 @@ class SQLCityRepository(CityRepository):
     async def get_or_create(
         self,
         name: str,
+        name_normalized: str,
         region: str = "",
         timezone: str = "Europe/Madrid",
         default_locale: str = "es",
@@ -36,7 +37,11 @@ class SQLCityRepository(CityRepository):
         if existing:
             return existing
         model = CityModel(
-            name=name, region=region, timezone=timezone, default_locale=default_locale
+            name=name,
+            name_normalized=name_normalized,
+            region=region,
+            timezone=timezone,
+            default_locale=default_locale,
         )
         self._session.add(model)
         await self._session.flush()
@@ -47,6 +52,7 @@ class SQLCityRepository(CityRepository):
         return City(
             id=model.id,
             name=model.name,
+            name_normalized=model.name_normalized,
             region=model.region,
             timezone=model.timezone,
             default_locale=model.default_locale,
@@ -66,7 +72,7 @@ class SQLVenueRepository(VenueRepository):
         return [self._to_domain(m) for m in result.scalars().all()]
 
     async def get_or_create(
-        self, name: str, city_id: int, address: str | None = None
+        self, name: str, city_id: int, address: str | None = None, url: str | None = None
     ) -> Venue:
         result = await self._session.execute(
             select(VenueModel).where(
@@ -77,10 +83,12 @@ class SQLVenueRepository(VenueRepository):
         if model:
             if address and model.address != address:
                 model.address = address
-                await self._session.flush()
+            if url and model.url != url:
+                model.url = url
+            await self._session.flush()
             return self._to_domain(model)
 
-        model = VenueModel(name=name, city_id=city_id, address=address)
+        model = VenueModel(name=name, city_id=city_id, address=address, url=url)
         self._session.add(model)
         await self._session.flush()
         return self._to_domain(model)
@@ -98,8 +106,7 @@ class SQLVenueRepository(VenueRepository):
             id=model.id,
             name=model.name,
             address=model.address,
-            latitude=model.latitude,
-            longitude=model.longitude,
+            url=model.url,
             city_id=model.city_id,
         )
 
@@ -129,12 +136,9 @@ class SQLEventRepository(EventRepository):
         )
 
         if date_from:
-            stmt = stmt.where(EventModel.date_start >= date_from)
+            stmt = stmt.where(EventModel.event_date >= date_from)
         if date_to:
-            stmt = stmt.where(
-                (EventModel.date_end == None) | (EventModel.date_end <= date_to)  # noqa: E711
-            )
-            stmt = stmt.where(EventModel.date_start <= date_to)  # noqa: E711
+            stmt = stmt.where(EventModel.event_date <= date_to)
         if event_type:
             stmt = stmt.where(EventModel.event_type == event_type.value)
         if genre:
@@ -142,7 +146,7 @@ class SQLEventRepository(EventRepository):
         if venue:
             stmt = stmt.where(VenueModel.name.ilike(f"%{venue}%"))
 
-        stmt = stmt.order_by(EventModel.date_start.asc()).limit(limit)
+        stmt = stmt.order_by(EventModel.event_date.asc()).limit(limit)
         result = await self._session.execute(stmt)
         return [self._to_domain(m) for m in result.unique().scalars().all()]
 
@@ -160,8 +164,7 @@ class SQLEventRepository(EventRepository):
             title=event.title,
             event_type=event.event_type.value,
             description=event.description,
-            date_start=event.date_start,
-            date_end=event.date_end,
+            event_date=event.event_date,
             price_info=event.price_info,
             url=event.url,
             source=event.source,
@@ -206,8 +209,7 @@ class SQLEventRepository(EventRepository):
                     id=model.venue.id,
                     name=model.venue.name,
                     address=model.venue.address,
-                    latitude=model.venue.latitude,
-                    longitude=model.venue.longitude,
+                    url=model.venue.url,
                     city_id=model.venue.city_id,
                 )
 
@@ -216,8 +218,7 @@ class SQLEventRepository(EventRepository):
             title=model.title,
             event_type=EventType(model.event_type),
             description=model.description,
-            date_start=model.date_start,
-            date_end=model.date_end,
+            event_date=model.event_date,
             price_info=model.price_info,
             url=model.url,
             source=model.source,

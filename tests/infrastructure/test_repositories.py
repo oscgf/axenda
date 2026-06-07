@@ -27,11 +27,11 @@ async def session() -> AsyncSession:
 @pytest.mark.asyncio
 async def test_city_get_or_create(session: AsyncSession) -> None:
     repo = SQLCityRepository(session)
-    city = await repo.get_or_create(name="Gijón", region="Asturias")
+    city = await repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
     assert city.name == "Gijón"
     assert city.id > 0
 
-    same = await repo.get_or_create(name="Gijón")
+    same = await repo.get_or_create(name="Gijón", name_normalized="gijon")
     assert same.id == city.id
 
 
@@ -47,7 +47,7 @@ async def test_venue_get_or_create(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     venue_repo = SQLVenueRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
     venue = await venue_repo.get_or_create(
         name="Teatro Jovellanos", city_id=city.id, address="Calle A"
     )
@@ -63,7 +63,7 @@ async def test_venue_list_by_city(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     venue_repo = SQLVenueRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
     await venue_repo.get_or_create(name="Sala A", city_id=city.id)
     await venue_repo.get_or_create(name="Sala B", city_id=city.id)
 
@@ -76,13 +76,13 @@ async def test_event_upsert_and_find(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     event_repo = SQLEventRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
 
     event = Event(
         id=0,
         title="Concierto de prueba",
         event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 1, 21, 0, tzinfo=UTC),
+        event_date=datetime(2026, 6, 1, 21, 0, tzinfo=UTC),
         source="test",
         source_id="evt-001",
         city_id=city.id,
@@ -100,16 +100,16 @@ async def test_event_search_by_city(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     event_repo = SQLEventRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
 
     await event_repo.upsert(Event(
         id=0, title="Evento 1", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 5, tzinfo=UTC),
+        event_date=datetime(2026, 6, 5, tzinfo=UTC),
         source="test", source_id="e1", city_id=city.id,
     ))
     await event_repo.upsert(Event(
         id=0, title="Evento 2", event_type=EventType.TEATRO,
-        date_start=datetime(2026, 6, 10, tzinfo=UTC),
+        event_date=datetime(2026, 6, 10, tzinfo=UTC),
         source="test", source_id="e2", city_id=city.id,
     ))
 
@@ -122,16 +122,16 @@ async def test_event_search_by_type(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     event_repo = SQLEventRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
 
     await event_repo.upsert(Event(
         id=0, title="Concierto", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 5, tzinfo=UTC),
+        event_date=datetime(2026, 6, 5, tzinfo=UTC),
         source="test", source_id="m1", city_id=city.id,
     ))
     await event_repo.upsert(Event(
         id=0, title="Obra de teatro", event_type=EventType.TEATRO,
-        date_start=datetime(2026, 6, 10, tzinfo=UTC),
+        event_date=datetime(2026, 6, 10, tzinfo=UTC),
         source="test", source_id="t1", city_id=city.id,
     ))
 
@@ -145,16 +145,16 @@ async def test_event_search_by_date_range(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     event_repo = SQLEventRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
 
     await event_repo.upsert(Event(
         id=0, title="Evento junio", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 5, tzinfo=UTC),
+        event_date=datetime(2026, 6, 5, tzinfo=UTC),
         source="test", source_id="d1", city_id=city.id,
     ))
     await event_repo.upsert(Event(
         id=0, title="Evento julio", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 7, 5, tzinfo=UTC),
+        event_date=datetime(2026, 7, 5, tzinfo=UTC),
         source="test", source_id="d2", city_id=city.id,
     ))
 
@@ -173,16 +173,16 @@ async def test_event_count_by_city(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     event_repo = SQLEventRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
 
     await event_repo.upsert(Event(
         id=0, title="E1", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 1, tzinfo=UTC),
+        event_date=datetime(2026, 6, 1, tzinfo=UTC),
         source="t", source_id="c1", city_id=city.id,
     ))
     await event_repo.upsert(Event(
         id=0, title="E2", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 2, tzinfo=UTC),
+        event_date=datetime(2026, 6, 2, tzinfo=UTC),
         source="t", source_id="c2", city_id=city.id,
     ))
 
@@ -195,11 +195,11 @@ async def test_event_deduplication(session: AsyncSession) -> None:
     city_repo = SQLCityRepository(session)
     event_repo = SQLEventRepository(session)
 
-    city = await city_repo.get_or_create(name="Gijón")
+    city = await city_repo.get_or_create(name="Gijón", name_normalized="gijon", region="Asturias")
 
     await event_repo.upsert(Event(
         id=0, title="Único", event_type=EventType.MUSICA,
-        date_start=datetime(2026, 6, 1, tzinfo=UTC),
+        event_date=datetime(2026, 6, 1, tzinfo=UTC),
         source="test", source_id="unique-1", city_id=city.id,
     ))
 

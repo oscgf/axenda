@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Table, Text, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -21,6 +21,7 @@ class CityModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    name_normalized: Mapped[str] = mapped_column(String, nullable=False)
     region: Mapped[str] = mapped_column(String, default="")
     timezone: Mapped[str] = mapped_column(String, default="Europe/Madrid")
     default_locale: Mapped[str] = mapped_column(String, default="es")
@@ -35,8 +36,7 @@ class VenueModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     address: Mapped[str | None] = mapped_column(String)
-    latitude: Mapped[float | None] = mapped_column(Float)
-    longitude: Mapped[float | None] = mapped_column(Float)
+    url: Mapped[str | None] = mapped_column(String)
     city_id: Mapped[int] = mapped_column(Integer, ForeignKey("cities.id"), nullable=False)
 
     city: Mapped["CityModel"] = relationship(back_populates="venues")
@@ -50,8 +50,7 @@ class EventModel(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     event_type: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
-    date_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    date_end: Mapped[datetime | None] = mapped_column(DateTime)
+    event_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     price_info: Mapped[str | None] = mapped_column(String)
     url: Mapped[str | None] = mapped_column(String)
     source: Mapped[str] = mapped_column(String, nullable=False)

@@ -11,12 +11,12 @@ async def main(limit: int = 10):
     async with async_session() as s:
         result = await s.execute(
             select(EventModel)
-            .where(EventModel.date_start >= datetime.now(UTC))
-            .order_by(EventModel.date_start.asc())
+            .where(EventModel.event_date >= datetime.now(UTC))
+            .order_by(EventModel.event_date.asc())
             .limit(limit)
         )
         for e in result.scalars():
-            print(f"  [{e.date_start.strftime('%d/%m')}] {e.title[:70]}  ({e.event_type})")
+            print(f"  [{e.event_date.strftime('%d/%m')}] {e.title[:70]}  ({e.event_type})")
 
 
 if __name__ == "__main__":
